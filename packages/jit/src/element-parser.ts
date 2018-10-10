@@ -33,7 +33,7 @@ export class ElementSyntax {
     }
 
   public static createMarker(): ElementSyntax {
-    return new ElementSyntax(createMarker(), 'au-marker', null, PLATFORM.emptyArray, PLATFORM.emptyArray)
+    return new ElementSyntax(createMarker(), 'au-marker', null, PLATFORM.emptyArray, PLATFORM.emptyArray);
   }
 }
 

@@ -39,8 +39,8 @@ export const BindingCommandResource: IResourceKind<IBindingCommandSource, IBindi
     return `${this.name}:${name}`;
   },
 
-  isType<T extends Constructable>(type: T): type is T & IBindingCommandType {
-    return (type as any).kind === this;
+  isType<T extends Constructable>($type: T): $type is T & IBindingCommandType {
+    return ($type as any).kind === this;
   },
 
   define<T extends Constructable>(nameOrSource: string | IBindingCommandSource, ctor: T): T & IBindingCommandType {
@@ -49,7 +49,7 @@ export const BindingCommandResource: IResourceKind<IBindingCommandSource, IBindi
 
     (Type as Writable<IBindingCommandType>).kind = BindingCommandResource;
     (Type as Writable<IBindingCommandType>).description = description;
-    Type.register = function(container: IContainer) {
+    Type.register = function(container: IContainer): void {
       container.register(Registration.singleton(Type.kind.keyFrom(description.name), Type));
     };
 

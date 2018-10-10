@@ -1,4 +1,4 @@
-import { inject, PLATFORM } from '@aurelia/kernel';
+import { inject, PLATFORM, Reporter } from '@aurelia/kernel';
 import {
   BindingMode,
   BindingType,
@@ -37,6 +37,7 @@ import {
   ViewCompileFlags
 } from '@aurelia/runtime';
 import { AttributeSymbol, ElementSymbol, IAttributeParser, IAttributeSymbol, IElementParser, NodeType, SemanticModel } from '.';
+import { CompilationError, CompilationWarning } from './error-codes';
 
 @inject(IExpressionParser, IElementParser, IAttributeParser)
 export class TemplateCompiler implements ITemplateCompiler {
@@ -106,7 +107,8 @@ export class TemplateCompiler implements ITemplateCompiler {
     for (let i = 0, ii = attributes.length; i < ii; ++i) {
       const $attr = attributes[i];
       if ($attr.isTemplateController) {
-        throw new Error('Cannot have template controller on surrogate element.');
+        throw Reporter.error(CompilationError.TemplateControllerOnSurrogate);
+        // throw new Error('Cannot have template controller on surrogate element.');
       }
       const instruction = this.compileAttribute($attr);
       if (instruction !== null) {
@@ -126,7 +128,8 @@ export class TemplateCompiler implements ITemplateCompiler {
           }
           $el.definition.surrogates.push(attrInst);
         } else {
-          throw new Error(`Invalid surrogate attribute: ${name}`);
+          throw Reporter.error(CompilationError.UniqueAttributeOnSurrogate);
+          // throw new Error(`Invalid surrogate attribute: ${name}`);
         }
       }
     }
@@ -140,7 +143,9 @@ export class TemplateCompiler implements ITemplateCompiler {
     const attributeInstructions: TargetedInstruction[] = [];
     for (let i = 0, ii = attributes.length; i < ii; ++i) {
       const $attr = attributes[i];
-      if ($attr.isProcessed) continue;
+      if ($attr.isProcessed) {
+        continue;
+      }
       $attr.markAsProcessed();
       if ($attr.isTemplateController) {
         let instruction = this.compileAttribute($attr);
@@ -170,7 +175,7 @@ export class TemplateCompiler implements ITemplateCompiler {
 
   private compileCustomElement($el: ElementSymbol): void {
     if ($el.$attributes.length === 0) {
-      $el.addInstructions([new HydrateElementInstruction($el.definition.name, <any>PLATFORM.emptyArray)]);
+      $el.addInstructions([new HydrateElementInstruction($el.definition.name, <TargetedInstruction[]>PLATFORM.emptyArray)]);
       $el.makeTarget();
       return;
     }
@@ -245,7 +250,8 @@ export class TemplateCompiler implements ITemplateCompiler {
         const expr = this.exprParser.parse($attr.rawValue, BindingType.Interpolation);
         if (expr === null) {
           // Should just be a warning, but throw for now
-          throw new Error(`Invalid let binding. String liternal given for attribute: ${$attr.dest}`);
+          throw Reporter.error(CompilationWarning.StringLiteralInLet);
+          // throw new Error(`Invalid let binding. String liternal given for attribute: ${$attr.dest}`);
         }
         letInstructions.push(new LetBindingInstruction(expr, dest));
       }
